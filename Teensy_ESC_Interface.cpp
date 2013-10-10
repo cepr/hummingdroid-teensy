@@ -7,6 +7,7 @@ const int ESC_FREQ = 400;
 const int MIN = 9 * ESC_FREQ;
 const int PINS[4] = {21, 4, 3, 22};
 const int MAX_SONAR_PIN = 23;
+const unsigned long USB_TIMEOUT_MS = 500;
 
 void setup()
 {
@@ -30,14 +31,24 @@ void loop()
     static int index = 0;
     static uint8_t previous_pulse_state = LOW;
     static unsigned long pulse_start = 0;
+    static unsigned long usb_timestamp = 0;
 
     // Read serial command from USB
     while (Serial.available()) {
         int b = Serial.read();
         analogWrite(PINS[index], MIN + b * 8);
         index = (index + 1) & 3;
+        usb_timestamp = millis();
     }
 
+    // Check for USB timeout
+    if (millis() - usb_timestamp > USB_TIMEOUT_MS) {
+        analogWrite(PINS[0], MIN);
+        analogWrite(PINS[1], MIN);
+        analogWrite(PINS[2], MIN);
+        analogWrite(PINS[3], MIN);
+    }
+/*
     // Read MAX SONAR pulse
     uint8_t pulse_state = digitalRead(MAX_SONAR_PIN);
     if (pulse_state != previous_pulse_state) {
@@ -54,4 +65,6 @@ void loop()
         }
         previous_pulse_state = pulse_state;
     }
+*/
 }
+
