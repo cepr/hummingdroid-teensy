@@ -1,6 +1,9 @@
 
 all: Teensy_ESC_Interface.eep Teensy_ESC_Interface.hex
 
+clean:
+	rm Teensy_ESC_Interface.eep Teensy_ESC_Interface.hex
+
 ARDUINO_PATH := /home/cedric/bin/arduino-1.0.5
 CC := $(ARDUINO_PATH)/hardware/tools/arm-none-eabi/bin/arm-none-eabi-gcc
 CXX := $(ARDUINO_PATH)/hardware/tools/arm-none-eabi/bin/arm-none-eabi-g++
@@ -17,7 +20,6 @@ LDLIBS := -lm
 LDFLAGS := -Os -mcpu=cortex-m4 -mthumb -Wl,--gc-sections -Tteensy3/mk20dx128.ld
 
 CXX_FILES := \
-    teensy3/IPAddress.cpp \
     teensy3/IPAddress.cpp \
     teensy3/Print.cpp \
     teensy3/HardwareSerial2.cpp \

@@ -2,12 +2,15 @@
 
 void setup();
 void loop();
+void max_sonar_pin_change();
 
 const int ESC_FREQ = 400;
 const int MIN = 9 * ESC_FREQ;
 const int PINS[4] = {21, 4, 3, 22};
 const int MAX_SONAR_PIN = 23;
 const unsigned long USB_TIMEOUT_MS = 500;
+
+volatile uint32_t max_sonar_value = (uint32_t)-1;
 
 void setup()
 {
@@ -21,16 +24,15 @@ void setup()
 
     // Configure Max sonar
     pinMode(MAX_SONAR_PIN, INPUT);
+    attachInterrupt(MAX_SONAR_PIN, max_sonar_pin_change, CHANGE);
 
     // Configure Serial
     Serial.begin(9600);
 }
 
-void loop()    
+void loop()
 {
     static int index = 0;
-    static uint8_t previous_pulse_state = LOW;
-    static unsigned long pulse_start = 0;
     static unsigned long usb_timestamp = 0;
 
     // Read serial command from USB
@@ -48,7 +50,25 @@ void loop()
         analogWrite(PINS[2], MIN);
         analogWrite(PINS[3], MIN);
     }
-/*
+
+    // Report
+    if (max_sonar_value != (uint32_t)-1) {
+        cli();
+        uint32_t value = max_sonar_value;
+        max_sonar_value = -1;
+        sei();
+        if (Serial.dtr()) {
+            Serial.write((const uint8_t*)&value, sizeof(uint32_t));
+            Serial.send_now();
+        }
+    }
+}
+
+void max_sonar_pin_change()
+{
+    static uint8_t previous_pulse_state = LOW;
+    static uint32_t pulse_start = 0;
+
     // Read MAX SONAR pulse
     uint8_t pulse_state = digitalRead(MAX_SONAR_PIN);
     if (pulse_state != previous_pulse_state) {
@@ -57,14 +77,8 @@ void loop()
             pulse_start = micros();
         } else {
             // Pulse is finished
-            unsigned long duration = micros() - pulse_start;
-            if (Serial.dtr()) {
-                Serial.write((const uint8_t*)&duration, sizeof(unsigned long));
-                Serial.send_now();
-            }
+            max_sonar_value = micros() - pulse_start;
         }
         previous_pulse_state = pulse_state;
     }
-*/
 }
-
